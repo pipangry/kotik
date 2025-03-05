@@ -1,0 +1,13 @@
+[package]
+name = "kotik"
+description = "Pack encryption utility for Minecraft Bedrock"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aes = "0.8.4"
+cfb8 = "0.8.1"
+rand = "0.9.0"
+serde_json = "1.0.140"
+crossbeam-channel = "0.5.14"
+serde = { version = "1.0.218", features = ["derive"] }
