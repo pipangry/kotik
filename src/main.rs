@@ -4,11 +4,12 @@ mod utils;
 mod marketplace;
 mod packs;
 
+const BLUE: &str = "\x1B[0;34m";
 const RED: &str = "\x1b[0;31m";
 const RESET: &str = "\x1b[0m";
 
 fn main() {
-    println!("Welcome to Kotik - Pack encryption utility for Minecraft Bedrock\n");
+    println!("{}Welcome to Kotik - Pack encryption utility for Minecraft Bedrock{}\n", BLUE, RESET);
     
     loop {
         let mut input = String::new();
