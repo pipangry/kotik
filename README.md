@@ -9,3 +9,5 @@ Next, use command `encrypt <your_key> <path_to_folder>` to encrypt your files.
 ## How to decrypt
 For decryption you need to have a key that you used to encrypt this pack. Next, find the folder with encrypted content. It must contain the contents.json file.
 Use command `decrypt <your_key> <path_to_folder>` to decrypt files.
+
+**Warning:** This tool is not intended to and cannot break Marketplace DRMs. Intended only for protecting resource pack on the servers.
