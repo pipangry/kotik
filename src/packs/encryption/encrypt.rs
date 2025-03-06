@@ -72,11 +72,6 @@ pub fn encrypt(key: &str, target_path: OsString) -> Result<(), PackEncryptionErr
         
         let encrypted_file_content = aes256_cbf8_encrypt(key, file_content)
             .map_err(|e| format!("Can't encrypt: {:#?}", e))?;
-        
-        // let encrypted_file_content_as_bytes_list = encrypted_file_content.iter()
-        //     .map(|b| b.to_string())
-        //     .collect::<Vec<String>>()
-        //     .join("\n");
 
         write_file(&encrypted_file_content, &full_path)
             .map_err(|e| format!("Can't write file: {}", e))?;

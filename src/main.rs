@@ -4,7 +4,7 @@ mod utils;
 mod marketplace;
 mod packs;
 
-const BLUE: &str = "\x1B[0;34m";
+const BLUE: &str = "\x1B[0;36m";
 const RED: &str = "\x1b[0;31m";
 const RESET: &str = "\x1b[0m";
 

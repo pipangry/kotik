@@ -47,6 +47,13 @@ pub fn decrypt(key: &str, target_path: OsString) -> Result<(), PackEncryptionErr
         let path = &item.path;
         let full_path = Path::new(&target_path).join(path);
 
+        // We need this system call since if contents.json isn't
+        // generated with Kotik, we can't verify that
+        // all it paths is valid
+        if full_path.is_dir() {
+            return Ok(());
+        }
+        
         let key = match &item.key {
             Some(v) => v,
             None => return Ok(()),
