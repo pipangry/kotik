@@ -3,18 +3,11 @@ use std::fs::{read};
 use std::io::Write;
 use std::path::{Path};
 use serde_json::json;
-use crate::packs::contents::{generate_contents_header, ContentsRoot, ContentsRootItem};
+use crate::packs::contents::{generate_contents_header, generate_contents_root, ContentsRoot};
 use crate::packs::manifest::get_uuid_from_manifest;
 use crate::packs::pack_encryption::{list_relative_paths, parallel_processing, write_file, PackEncryptionError};
-use crate::utils::cipher::{aes256_cbf8_encrypt, generate_random_key};
+use crate::utils::cipher::{aes256_cbf8_encrypt};
 use crate::utils::cli::get_choice;
-
-const DONT_ENCRYPT: [&str; 4] = [
-    "manifest.json",
-    "contents.json",
-    "pack_icon.png",
-    "texts/",
-];
 
 // This function can be represented as stages:
 // 1. Collecting uuid and relative paths
@@ -41,12 +34,7 @@ pub fn encrypt(key: &str, target_path: OsString) -> Result<(), PackEncryptionErr
     let mut content_file_as_bytes = generate_contents_header(&uuid)
         .map_err(PackEncryptionError::ContentsGeneratingError)?;
 
-    let content = relative_paths.iter()
-        .map(|rel_path| ContentsRootItem {
-            path: rel_path.to_string_lossy().replace("\\", "/"),
-            key: generate_random_key()
-        })
-        .collect::<Vec<ContentsRootItem>>();
+    let content = generate_contents_root(&relative_paths);
 
     let root = ContentsRoot {
         version: 1,
@@ -69,17 +57,20 @@ pub fn encrypt(key: &str, target_path: OsString) -> Result<(), PackEncryptionErr
 
     // Encrypting files
     parallel_processing(root.content, move |item| {
-        /* Cloning is not critical in this case */
-        let path = item.path.clone();
-        let full_path = Path::new(&target_path).join(&path);
-        if should_skip(&path) | full_path.is_dir() {
-            return Ok(());
-        }
+        let path = &item.path;
+        let full_path = Path::new(&target_path).join(path);
         
-        let file_content = read(&full_path)
-            .map_err(|e| format!("Can't' read file {:?}: {}", &path, e))?;
+        let key = match &item.key {
+            Some(key) => key,
+            None => { return Ok(()) }
+        };
 
-        let encrypted_file_content = aes256_cbf8_encrypt(&item.key.clone(), file_content)
+        // We need to read it after key validation since folders don't have
+        // key, and we can escape calling system check
+        let file_content = read(&full_path)
+            .map_err(|e| format!("Can't read file {}: {}", &path, e))?;
+        
+        let encrypted_file_content = aes256_cbf8_encrypt(key, file_content)
             .map_err(|e| format!("Can't encrypt: {:#?}", e))?;
         
         // let encrypted_file_content_as_bytes_list = encrypted_file_content.iter()
@@ -94,10 +85,4 @@ pub fn encrypt(key: &str, target_path: OsString) -> Result<(), PackEncryptionErr
         Ok(())
     }).map_err(PackEncryptionError::ProcessingError)?;
     Ok(())
-}
-
-pub fn should_skip(path: &str) -> bool {
-    DONT_ENCRYPT.iter().any(|pattern| {
-        path.starts_with(pattern)
-    })
 }

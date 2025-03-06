@@ -1,11 +1,11 @@
 use std::ffi::OsString;
 use std::fs::{read_dir, File};
 use std::io::{Error, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::string::FromUtf8Error;
 use std::sync::{Arc};
 use std::thread;
-use crate::utils::cipher::CipherError;
+use crate::utils::cipher::{generate_random_key, CipherError};
 use crate::utils::cli::{get_input};
 
 // Pack encryption is encrypt/decrypt commands
@@ -47,11 +47,20 @@ pub fn list_relative_paths(root: &OsString) -> std::io::Result<Vec<PathBuf>> {
             let entry_rel_path = rel_path.join(&file_name);
 
             if entry.file_type()?.is_dir() {
-                /* I don't know how to escape using clone() here */
+                // TODO: try to refactor this without .clone()
                 dirs_to_visit.push(entry_rel_path.clone());
+                
+                let mut modified_path = entry_rel_path.clone().into_os_string();
+                
+                // Buffer to hold the bytes of the separator
+                let mut sep_buf = [0u8; 4];
+                let sep_str = MAIN_SEPARATOR.encode_utf8(&mut sep_buf);
+                /* For folders Minecraft needs '/' */
+                modified_path.push(sep_str);
+                entries.push(PathBuf::from(modified_path));
+            } else {
+                entries.push(entry_rel_path);
             }
-            
-            entries.push(entry_rel_path);
         }
     }
 
@@ -94,7 +103,7 @@ where
             let mut errors = Vec::new();
             while let Ok(task) = receiver.recv() {
                 if let Err(e) = function(&task) {
-                    errors.push(format!("Error: {:?}\nIn file: {:#?}", e, task));
+                    errors.push(e);
                 }
             }
             errors
@@ -133,9 +142,16 @@ where F: Fn(&str, OsString) -> Result<(), PackEncryptionError> {
         args[1..].join(" ")
     };
     
-    let key = args[0];
+    let key = if args[0] == "-r" {
+        &generate_random_key()
+    } else {
+        args[0]
+    };
     let path = OsString::from(path_arg);
     
     (command)(key, path)
-        .map_err(|e| format!("Pack encryption error: {:#?}", e))
+        .map_err(|e| format!("Pack encryption error: {:#?}", e))?;
+    
+    println!("Key: {:?}", key);
+    Ok(())
 }

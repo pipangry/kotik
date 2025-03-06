@@ -1,10 +1,11 @@
+use std::fs::read;
 use std::io;
 use std::io::{Write};
 use std::process::exit;
 use crate::packs::encryption::decrypt::decrypt;
 use crate::packs::encryption::encrypt::encrypt;
 use crate::packs::pack_encryption::{parse_pack_encryption_args};
-use crate::utils::cipher::{generate_random_key};
+use crate::utils::cipher::{aes256_cfb8_decrypt, generate_random_key};
 
 #[derive(Debug)]
 struct Command<F> {
@@ -25,7 +26,7 @@ const COMMANDS: &Commands = &[
     },
     Command {
         name: "encrypt",
-        description: "Encrypt a resource or behavior pack with given key and directory path",
+        description: "Encrypt a resource or behavior pack with given key and directory path. Use -r as key if you want to generate random key",
         usage: "encrypt <key> <path>",
         callback: |args| {
             parse_pack_encryption_args(args, encrypt)
@@ -33,8 +34,8 @@ const COMMANDS: &Commands = &[
     },
     Command {
         name: "decrypt",
-        description: "Decrypt a resource or behavior pack with given key and directory path",
-        usage: "decrypt < key> <path>",
+        description: "Decrypt a resource or behavior pack with given key and directory path. Use -r as key if you want to generate random key",
+        usage: "decrypt <key> <path>",
         callback: |args| {
             parse_pack_encryption_args(args, decrypt)
         }
@@ -56,17 +57,23 @@ const COMMANDS: &Commands = &[
             exit(0);
         }
     },
-    // Command {
-    //     name: "test",
-    //     description: "Test function",
-    //     usage: "test",
-    //     callback: test
-    // }
+    #[cfg(debug_assertions)]
+    Command {
+        name: "test",
+        description: "Test function",
+        usage: "test",
+        callback: test
+    }
 ];
 
-// fn test(args: &[&str]) -> Result<(), String> {
-//     Ok(())
-// }
+fn test(_: &[&str]) -> Result<(), String> {
+    let key = "s5s5ejuDru4uchuF2drUFuthaspAbepE";
+    let encrypted_content = read(r"...").unwrap();
+    let decrypted_content = aes256_cfb8_decrypt(key, encrypted_content[0x100..].to_vec()).unwrap();
+    let content = String::from_utf8(decrypted_content).unwrap();
+    println!("{}", content);
+    Ok(())
+}
 
 fn help(context: &[&str]) -> Result<(), String> {
     if context.is_empty() {
