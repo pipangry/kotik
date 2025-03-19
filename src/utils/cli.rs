@@ -1,10 +1,10 @@
-use std::io;
-use std::io::{Write};
-use std::process::exit;
 use crate::packs::encryption::decrypt::decrypt;
 use crate::packs::encryption::encrypt::encrypt;
-use crate::packs::pack_encryption::{parse_pack_encryption_args};
-use crate::utils::cipher::{generate_random_key};
+use crate::packs::pack_encryption::parse_pack_encryption_args;
+use crate::utils::cipher::generate_random_key;
+use std::io;
+use std::io::Write;
+use std::process::exit;
 
 #[derive(Debug)]
 struct Command<F> {
@@ -76,19 +76,26 @@ fn test(_: &[&str]) -> Result<(), String> {
 
 fn help(context: &[&str]) -> Result<(), String> {
     if context.is_empty() {
-        println!("{}", COMMANDS.iter()
-            .map(|cmd| format!("\"{}\" - {}", cmd.name, cmd.description))
-            .collect::<Vec<_>>()
-            .join("\n")
+        println!(
+            "{}",
+            COMMANDS
+                .iter()
+                .map(|cmd| format!("\"{}\" - {}", cmd.name, cmd.description))
+                .collect::<Vec<_>>()
+                .join("\n")
         );
         return Ok(());
     }
 
-    let cmd = COMMANDS.iter()
+    let cmd = COMMANDS
+        .iter()
         .find(|cmd| cmd.name == context[0])
         .ok_or(format!("Command '{}' not found", context[0]))?;
 
-    println!("\"{}\" - {}\nUsage: \"{}\"\n", cmd.name, cmd.description, cmd.usage);
+    println!(
+        "\"{}\" - {}\nUsage: \"{}\"\n",
+        cmd.name, cmd.description, cmd.usage
+    );
     Ok(())
 }
 
@@ -96,22 +103,24 @@ pub fn handle_user_input(input: &str) -> Result<(), String> {
     let args: Vec<&str> = input.split_whitespace().collect();
     if let Some(cmd) = COMMANDS.iter().find(|cmd| cmd.name == args[0]) {
         (cmd.callback)(&args[1..])?;
-        return Ok(())
+        return Ok(());
     }
-    Err(format!("Unknown command '{}'. Use 'help' to get full list of commands", args[0]))
+    Err(format!(
+        "Unknown command '{}'. Use 'help' to get full list of commands",
+        args[0]
+    ))
 }
 
 pub fn get_input(prompt: &str, buffer: &mut String) {
     println!("{}", prompt);
     print!("> ");
-    
+
     io::stdout().flush().expect("Failed to flush stdout");
-    
-    io::stdin().read_line(buffer)
-        .unwrap_or_else(|e| {
-            println!("Invalid input: {}", e);
-            0
-        });
+
+    io::stdin().read_line(buffer).unwrap_or_else(|e| {
+        println!("Invalid input: {}", e);
+        0
+    });
 }
 
 pub fn get_choice(prompt: String) -> bool {
@@ -124,15 +133,13 @@ pub fn get_choice(prompt: String) -> bool {
 
         input.clear();
         match io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                match input.trim().to_lowercase().as_str() {
-                    "y" | "yes" => return true,
-                    "n" | "no" => return false,
-                    _ => {
-                        println!("\nInvalid input. Please enter 'y' or 'n'.");
-                    }
+            Ok(_) => match input.trim().to_lowercase().as_str() {
+                "y" | "yes" => return true,
+                "n" | "no" => return false,
+                _ => {
+                    println!("\nInvalid input. Please enter 'y' or 'n'.");
                 }
-            }
+            },
             Err(e) => {
                 println!("\nError reading input: {}. Please try again.", e);
             }

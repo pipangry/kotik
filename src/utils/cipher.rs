@@ -22,8 +22,8 @@ pub fn aes256_cbf8_encrypt(key: &str, mut bytes: Vec<u8>) -> Result<Vec<u8>, Cip
     let key = get_key_as_bytes(key)?;
     let iv = key.split_at(16).0;
 
-    let encryptor = Aes256Cfb8Encryptor::new_from_slices(key, iv)
-        .map_err(|_| CipherError::InvalidLength)?;
+    let encryptor =
+        Aes256Cfb8Encryptor::new_from_slices(key, iv).map_err(|_| CipherError::InvalidLength)?;
 
     encryptor.encrypt(&mut bytes);
 
@@ -34,11 +34,11 @@ pub fn aes256_cfb8_decrypt(key: &str, mut bytes: Vec<u8>) -> Result<Vec<u8>, Cip
     let key = get_key_as_bytes(key)?;
     let iv = key.split_at(16).0;
 
-    let decryptor = Aes256Cfb8Decryptor::new_from_slices(key, iv)
-        .map_err(|_| CipherError::InvalidLength)?;
+    let decryptor =
+        Aes256Cfb8Decryptor::new_from_slices(key, iv).map_err(|_| CipherError::InvalidLength)?;
 
     decryptor.decrypt(&mut bytes);
-    
+
     Ok(bytes)
 }
 

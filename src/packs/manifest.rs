@@ -1,9 +1,9 @@
+use crate::utils::comments::clear_comments;
+use serde_json::Value;
 use std::ffi::OsString;
 use std::fs;
-use std::path::PathBuf;
 use std::fs::metadata;
-use serde_json::{Value};
-use crate::utils::comments::clear_comments;
+use std::path::PathBuf;
 
 pub fn get_uuid_from_manifest(target_directory: &OsString) -> Result<String, String> {
     let mut path = PathBuf::from(target_directory);
@@ -17,8 +17,8 @@ pub fn get_uuid_from_manifest(target_directory: &OsString) -> Result<String, Str
         return Err(String::from("No manifest.json file in provided directory"));
     }
 
-    let mut manifest_content = fs::read_to_string(&path)
-        .map_err(|e| format!("Can't read manifest file: {}", e))?;
+    let mut manifest_content =
+        fs::read_to_string(&path).map_err(|e| format!("Can't read manifest file: {}", e))?;
 
     clear_comments(&mut manifest_content);
 
